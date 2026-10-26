@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens: space-separated RGB so Tailwind can apply opacity. */
+:root {
+  --paper: 245 240 230;    /* warm printed-page off-white */
+  --card: 252 249 243;
+  --ink: 29 24 21;
+  --muted: 105 96 87;
+  --line: 223 214 199;
+  --silk: 122 31 43;       /* Mysore silk maroon */
+  --turmeric: 201 146 14;  /* turmeric */
+  --stone: 138 131 120;    /* temple stone */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: 24 20 18; --card: 34 29 26; --ink: 241 234 222; --muted: 166 156 144;
+    --line: 60 52 46; --silk: 216 132 142; --turmeric: 232 184 70; --stone: 150 143 132;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: 24 20 18; --card: 34 29 26; --ink: 241 234 222; --muted: 166 156 144;
+  --line: 60 52 46; --silk: 216 132 142; --turmeric: 232 184 70; --stone: 150 143 132;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+@layer base {
+  html { color-scheme: light dark; }
+  body { @apply bg-paper text-ink font-sans antialiased; padding-bottom: 6.5rem; }
+  :focus-visible { outline: 2px solid rgb(var(--silk)); outline-offset: 2px; border-radius: 6px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+}
+
+@layer components {
+  /* Kannada is always the largest thing in any phrase block. */
+  .kn { @apply font-kn-serif; line-height: 1.55; }
+  .kn-lg { @apply font-kn-serif text-[2rem] font-semibold; line-height: 1.55; }
+  .kn-md { @apply font-kn-serif text-[1.5rem] font-medium; line-height: 1.55; }
+  .surface { @apply rounded-xl2 border border-line bg-card shadow-card; }
+  .btn-icon { @apply inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-card text-ink transition-colors hover:bg-line/50; }
+  .btn-primary { @apply inline-flex h-11 items-center gap-2 rounded-full bg-silk px-5 font-medium text-paper transition-opacity hover:opacity-90; }
+  .chip { @apply inline-flex min-h-[44px] items-center gap-2 rounded-full border border-line bg-card px-4 text-sm font-medium transition-colors hover:border-silk/50; }
+}
