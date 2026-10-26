@@ -1,55 +1,110 @@
-Kannada for Everyone
-An interactive phrasebook and coach that helps people who speak no Kannada learn the Kannada they need today: in autos, buses, restaurants, hospitals and offices.
-Built for the Kannada Digital Innovation Hackathon 2026 (HackerRank Campus Crew, NIE Mysuru). Problem statement: help non-Kannada speakers learn practical Kannada through everyday conversations, situations, vocabulary and guided practice.
+# Kannada for Everyone
 
+Learn the Kannada you need today: in an auto, on a bus, at a hospital counter.
 
+I built this for the Kannada Digital Innovation Hackathon 2026 (HackerRank Campus Crew, NIE Mysuru). I picked problem statement 1: help people who don't speak Kannada learn practical Kannada through everyday conversations, situations, vocabulary and guided practice.
 
-Features
-Home with a phrase of the day, search and situation shortcuts
-11 situations, each with phrases, a sample conversation and cultural tips (Phase 2)
-Listen button on every Kannada phrase, plus slow speed
-Smart search with translation, pronunciation and related phrases (Phase 3)
-AI assistant and role-play coach (Phase 4)
-Flashcards, quiz, pronunciation check, progress and saved phrases (Phase 5)
-No login. Progress and saved phrases stay in your browser (localStorage)
-Status: all six phases done. Next step is deploying and submitting.
+**Live demo:** <your-vercel-link>
 
+## The idea
 
-Tech stack
-Next.js 14 (App Router), TypeScript, Tailwind CSS, Lucide icons, Google Gemini API (server-side routes only, from Phase 3), Web Speech API.
+Someone who has just moved to Bengaluru or Mysuru doesn't need to start with the alphabet. They need to say "put the meter on" on day one. So this app starts from the situation, not the lesson. You pick where you are, hear the phrases, and practise them.
 
+Kannada script is always the biggest thing on the screen. Under it you get how it sounds in English letters and what it means.
 
+## What it does
 
+- **Home:** a phrase of the day, a search bar, shortcuts to every situation, and a link back to the last situation you opened.
+- **Situations:** 11 everyday places: auto and cab, BMTC bus and Namma Metro, restaurant and street food, vegetable market, hospital and pharmacy, hotel, asking directions, neighbours and landlord, office and college, bank and government offices, and emergency. Each one has phrases, a sample two-way conversation, and notes on what to know and what is better not to say. There are 104 phrases in total.
+- **Listen:** a speaker button and a slow-speed button on every Kannada phrase.
+- **Search:** type English, or Kannada in English letters, and get the Kannada script, how to say it, the meaning, and a few related phrases people usually need next.
+- **Ask:** ask a question in plain English (typed, or spoken with the mic button) and get the answer with script, pronunciation and a cultural tip.
+- **Coach:** a role-play mode. I pretend to be an auto driver, a waiter, a vegetable vendor or a bus conductor, you reply, and the coach corrects you gently, gives a hint if you're stuck, and suggests what to learn next.
+- **Read a sign:** take a photo of a bus board or shop sign and the app reads the Kannada and explains it.
+- **Practice:** flashcards, a listen-and-pick quiz, and "Say it", which listens to you and checks your pronunciation. Smart review brings back the phrases you miss sooner and the ones you know later. There is a streak and a count of phrases learned.
+- **Saved:** your own phrasebook. It works offline for phrases already in the app.
+- Dark mode, and no login anywhere. Everything you save stays in your browser.
 
-Search and the AI
-/search looks in the bundled phrasebook first. Only when nothing matches (or you tap "Ask the AI instead") does the browser call POST /api/translate, which calls Gemini on the server and returns { kannada, transliteration, meaning_english, usage_tip, related_phrases[] }. Answers are cached in server memory and in your browser (last 40). On a 429 or quota error the page says so and shows the closest phrasebook matches. Nothing is sent on each keystroke, only on submit.
+## Tech stack
 
+- Next.js 14 (App Router), React 18 and TypeScript
+- Tailwind CSS with my own colour and font tokens
+- Lucide for icons
+- Google Gemini API through the official `@google/genai` SDK
+- Web Speech API (speech output and speech recognition), localStorage, a small service worker for offline use
+- Deployed on Vercel
 
-Ask and Coach
-/ask has two modes. Ask answers questions with script, transliteration, meaning and a cultural tip. Coach plays a scene (auto driver, waiter, vendor, conductor), corrects your lines gently, offers a hint, and suggests what to learn next. Both call POST /api/chat. If the AI is unavailable, Ask falls back to the closest phrasebook matches.
+## How it works
 
+The phrasebook is plain JSON in `src/data/situations.json`, so most of the app works without any AI at all.
 
-Read a sign
-/scan takes a photo (or one from your gallery), shrinks it in the browser, and sends it to POST /api/scan. Gemini reads the Kannada and returns the text, pronunciation, meaning and a tip, plus other short text on the sign. Photos are passed to Gemini and not stored by this app.
+1. When you search, the app looks in the built-in phrases first. If it finds a match, you get it instantly.
+2. If there is no match, it checks the answers your browser has already saved.
+3. Only then does the browser call one of my API routes (`/api/translate`, `/api/chat` or `/api/scan`). Those routes call Gemini from the server.
 
+The Gemini key lives only on the server. It is read from an environment variable and never reaches the browser. I ask Gemini for JSON in a fixed shape, check the reply before showing it, cache it, and limit how often one visitor can call it, so the free tier lasts. The system prompt tells it to use natural spoken Kannada, always give script, pronunciation and meaning, and say "I'm not sure" instead of guessing.
 
-Voice questions
-In Ask, the mic button fills the box using the browser's speech recogniser (English; in Coach there is a switch to Kannada). You can check the words before sending. Chrome works best.
+If Gemini is unavailable or the free limit is hit, the app says so in plain words and shows the closest phrases from the phrasebook instead.
 
+## Running it locally
 
-Practice
-Three modes on /practice, drawn from all phrases, your saved phrases, or one situation: flashcards, a listen-and-pick quiz (with a show-text option for devices with no Kannada voice) and Say it, which uses the browser's speech recogniser (kn-IN, Chrome works best) to compare what you said with the phrase. The check is approximate. Streak and phrases learned are kept in localStorage. Smart review is the default set: it uses Leitner boxes, so a wrong answer brings a phrase back today, and each right answer waits longer (1, 2, 4, 8, then 16 days) before it returns.
+You need Node.js 18.17 or newer.
 
+```bash
+git clone https://github.com/<your-username>/kannada-for-everyone.git
+cd kannada-for-everyone
+npm install
+cp .env.example .env.local
+```
 
-Theme and accessibility
-Dark mode follows the device, and the sun/moon button on Home overrides it. There is a skip link, visible focus rings, reduced-motion support, and answers are never shown by colour alone.
+Open `.env.local` and paste your Gemini key after `GEMINI_API_KEY=`, with no quotes or spaces. You can get a free key from Google AI Studio. Then start the app:
 
+```bash
+npm run dev
+```
 
-Listen and offline
-Listen uses the browser's Kannada voice (kn-IN). If a device has none, it plays public/audio/<phrase-id>.mp3 when present, otherwise shows a clear message. A small service worker caches pages you've opened, so the phrasebook and situations work offline.
+Open http://localhost:3000. To check that the key was picked up, open http://localhost:3000/api/health. It should say `"geminiKeyFound": true`.
 
+Restart `npm run dev` any time you change `.env.local`, because it is only read when the server starts.
 
+## Environment variables
 
+| Name | What it is |
+|---|---|
+| `GEMINI_API_KEY` | Your Gemini API key. Server only. Never commit it. |
+| `GEMINI_MODEL` | The Gemini model to use. I'm using `gemini-3.5-flash`. |
 
-How it works
-Seed data in src/data/situations.json is checked first. Gemini is called only when the seed has no answer, and answers are cached. Folders: src/app (pages), src/components, src/lib (data, storage, speech), src/data.
+## Deploying to Vercel
+
+1. Push the repo to GitHub.
+2. On vercel.com, choose Add New, then Project, and import the repo.
+3. Add `GEMINI_API_KEY` and `GEMINI_MODEL` under Environment Variables. Vercel does not read `.env.local`.
+4. Deploy. Then open `/api/health` on the live site and try Ask.
+
+Every push to `main` deploys again. If you change an environment variable later, redeploy so it takes effect.
+
+## Project structure
+
+```
+src/
+  app/          pages and API routes (api/translate, api/chat, api/scan, api/health)
+  components/   screens and shared pieces (phrase card, tab bar, practice modes)
+  lib/          search, storage, speech, practice logic, Gemini code (lib/server)
+  data/         situations.json, the phrasebook
+public/         service worker and the folder for recorded audio
+```
+
+## Things to know
+
+- **Listen** uses the Kannada voice on your device. Some phones don't have one. In that case the app plays a recording from `public/audio` if there is one, and otherwise tells you. I haven't recorded any audio yet.
+- **Say it** and the mic in Ask use the browser's speech recognition. It works best in Chrome and the check is approximate, not a grade.
+- The AI features run on the free Gemini tier, so they can hit a limit.
+- The phrases need a check by native Kannada speakers. If you find a mistake, please open an issue.
+
+## What I'd like to add
+
+- Recorded audio for every phrase
+- More phrases and more situations
+- Regional speech from other parts of Karnataka
+- A voice-first coach
+- Explanations in Hindi, Tamil, Telugu and Malayalam
